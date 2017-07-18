@@ -49,7 +49,7 @@ Function DeriveMADZPct(value As Double, myArray As Variant)
     If (Abs(value) <= 1) Then
         DeriveMADZPct = ((value + 1) / 4) + 0.25
     ElseIf (value > 1) Then
-        DeriveMADZPct = (value - 1) / (Application.WorksheetFunction.Max(myArray3) - 1) * 0.25 + 0.75
+        DeriveMADZPct = ((value - 1) / (Application.WorksheetFunction.Max(myArray3) - 1)) * 0.25 + 0.75
     ElseIf (value < -1) Then
         DeriveMADZPct = 0.25 - ((value + 1) / (Application.WorksheetFunction.Min(myArray3) + 1) * 0.25)
     ElseIf value = 0 Then
@@ -68,6 +68,10 @@ Function DeriveMADZPercents(myArray As Variant)
     
     Dim MAD As Double
     
+    Dim MaxZ As Double
+    
+    Dim MinZ As Double
+    
     MAD = DeriveMAD(myArray)
 
     Dim Rows As Integer
@@ -79,27 +83,41 @@ Function DeriveMADZPercents(myArray As Variant)
         
     Dim i As Integer
     
+    'Assign Z's first
     For i = 1 To Rows
-        value = myArray(i)
         
+        value = myArray(i)
         value = (value - Application.WorksheetFunction.Median(myArray)) / MAD
+        myArray4(i) = value
+    
+    Next i
+    
+    'get Min
+    'get Max
+    
+    MaxZ = Application.WorksheetFunction.Max(myArray4)
+    MinZ = Application.WorksheetFunction.Min(myArray4)
+    
+    For i = 1 To Rows
+    
+        value = myArray4(i)
         
         If (Abs(value) <= 1) Then
             value = ((value + 1) / 4) + 0.25
         ElseIf (value > 1) Then
-            value = (value - 1) / (Application.WorksheetFunction.Max(myArray3) - 1) * 0.25 + 0.75
+            
+            value = (value - 1) / (MaxZ - 1) * 0.25 + 0.75
+            '(value - 1) '/ (Application.WorksheetFunction.Max(myArray3) - 1) '* 0.25 + 0.75
         ElseIf (value < -1) Then
-            value = 0.25 - ((value + 1) / (Application.WorksheetFunction.Min(myArray3) + 1) * 0.25)
+            value = 0.25 - ((value + 1) / (MinZ + 1) * 0.25)
         ElseIf value = 0 Then
             value = 0.5
         End If
-
-        'assign value
-        'MsgBox value
-        'MsgBox i
         myArray4(i) = value
     
     Next i
+    
+    'Assign %'s second (need Z's to derive Max's/Min's)
     
     DeriveMADZPercents = Application.WorksheetFunction.Transpose(myArray4())
     
