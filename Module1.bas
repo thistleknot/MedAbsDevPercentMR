@@ -6,15 +6,15 @@ Function DeriveMAD(myArray As Variant)
     Dim MAD As Double
     
     'Get Column size
-    Dim Columns As Integer
-    Columns = Application.WorksheetFunction.Count(myArray)
+    Dim Rows As Integer
+    Rows = Application.WorksheetFunction.Count(myArray)
     
-    'set myArray2 to 1 to # of Columns
-    ReDim myArray2(1 To Columns)
+    'set myArray2 to 1 to # of Rows
+    ReDim myArray2(1 To Rows)
     
     'Derive distance from Median
     Dim i As Integer
-    For i = 1 To Columns
+    For i = 1 To Rows
         myArray2(i) = Abs(myArray(i) - Application.WorksheetFunction.Median(myArray))
     Next i
     
@@ -32,15 +32,15 @@ Function DeriveMADZPct(value As Double, myArray As Variant)
     
     MAD = DeriveMAD(myArray)
 
-    Dim Columns As Integer
+    Dim Rows As Integer
     
-    Columns = Application.WorksheetFunction.Count(myArray)
+    Rows = Application.WorksheetFunction.Count(myArray)
     
-    'set myArray2 to 1 to # of Columns
-    ReDim myArray3(1 To Columns)
+    'set myArray2 to 1 to # of Rows
+    ReDim myArray3(1 To Rows)
     
     Dim i As Integer
-    For i = 1 To Columns
+    For i = 1 To Rows
         myArray3(i) = (myArray(i) - Application.WorksheetFunction.Median(myArray)) / MAD
     Next i
     
@@ -58,5 +58,49 @@ Function DeriveMADZPct(value As Double, myArray As Variant)
     
     
     'DeriveMADZ = myArray2
+    
+End Function
+
+'Returns array as Percents based on MAD Z Score normalization around 1 MAD.
+Function DeriveMADZPercents(myArray As Variant)
+
+    Dim myArray4() As Variant
+    
+    Dim MAD As Double
+    
+    MAD = DeriveMAD(myArray)
+
+    Dim Rows As Integer
+    
+    Rows = Application.WorksheetFunction.Count(myArray)
+    
+    'set myArray2 to 1 to # of Rows
+    ReDim myArray4(1 To Rows)
+        
+    Dim i As Integer
+    
+    For i = 1 To Rows
+        value = myArray(i)
+        
+        value = (value - Application.WorksheetFunction.Median(myArray)) / MAD
+        
+        If (Abs(value) <= 1) Then
+            value = ((value + 1) / 4) + 0.25
+        ElseIf (value > 1) Then
+            value = (value - 1) / (Application.WorksheetFunction.Max(myArray3) - 1) * 0.25 + 0.75
+        ElseIf (value < -1) Then
+            value = 0.25 - ((value + 1) / (Application.WorksheetFunction.Min(myArray3) + 1) * 0.25)
+        ElseIf value = 0 Then
+            value = 0.5
+        End If
+
+        'assign value
+        'MsgBox value
+        'MsgBox i
+        myArray4(i) = value
+    
+    Next i
+    
+    DeriveMADZPercents = Application.WorksheetFunction.Transpose(myArray4())
     
 End Function
