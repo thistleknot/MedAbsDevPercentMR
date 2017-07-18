@@ -1,4 +1,3 @@
-Attribute VB_Name = "Module1"
 Function DeriveMAD(myArray As Variant)
     
     Dim myArray2() As Variant
@@ -34,6 +33,8 @@ Function DeriveMADZPct(value As Double, myArray As Variant)
 
     Dim Rows As Integer
     
+    Dim theMedian As Double
+    
     Rows = Application.WorksheetFunction.Count(myArray)
     
     'set myArray2 to 1 to # of Rows
@@ -56,9 +57,6 @@ Function DeriveMADZPct(value As Double, myArray As Variant)
         DeriveMADZPct = 0.5
     End If
     
-    
-    'DeriveMADZ = myArray2
-    
 End Function
 
 'Returns array as Percents based on MAD Z Score normalization around 1 MAD.
@@ -76,6 +74,10 @@ Function DeriveMADZPercents(myArray As Variant)
 
     Dim Rows As Integer
     
+    Dim theMedian As Double
+    
+    theMedian = Application.WorksheetFunction.Median(myArray)
+    
     Rows = Application.WorksheetFunction.Count(myArray)
     
     'set myArray2 to 1 to # of Rows
@@ -87,7 +89,8 @@ Function DeriveMADZPercents(myArray As Variant)
     For i = 1 To Rows
         
         value = myArray(i)
-        value = (value - Application.WorksheetFunction.Median(myArray)) / MAD
+        'value = (value - Application.WorksheetFunction.Median(myArray)) / MAD
+        value = (value - theMedian) / MAD
         myArray4(i) = value
     
     Next i
