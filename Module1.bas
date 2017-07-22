@@ -1,3 +1,4 @@
+Attribute VB_Name = "Module1"
 Function DeriveMAD(myArray As Variant)
     
     Dim myArray2() As Variant
@@ -59,8 +60,34 @@ Function DeriveMADZPct(value As Double, myArray As Variant)
     
 End Function
 
+Function ReturnColumns(myArray As Range)
+    ReturnColumns = myArray.Columns.Count
+End Function
+
+
+Function ReturnArray(myArray As Range)
+
+    Dim myArray4() As Variant
+
+    Dim Rows As Integer
+    
+    Dim Columns As Integer
+    
+    Rows = Application.WorksheetFunction.Count(myArray)
+    
+    Columns = ReturnColumns(myArray)
+    
+    'set myArray4 to 1 to # of Rows
+    ReDim myArray4(1 To Columns, 1 To Rows)
+    
+    myArray4 = myArray
+
+    ReturnArray = myArray4()
+    
+End Function
+
 'Returns array as Percents based on MAD Z Score normalization around 1 MAD.
-Function DeriveMADZPercents(myArray As Variant)
+Function DeriveMADZPercents(myArray As Range)
 
     Dim myArray4() As Variant
     
@@ -74,52 +101,70 @@ Function DeriveMADZPercents(myArray As Variant)
 
     Dim Rows As Integer
     
+    Dim Columns As Integer
+    
     Dim theMedian As Double
     
     theMedian = Application.WorksheetFunction.Median(myArray)
     
     Rows = Application.WorksheetFunction.Count(myArray)
     
-    'set myArray2 to 1 to # of Rows
-    ReDim myArray4(1 To Rows)
+    Columns = ReturnColumns(myArray)
+    
+    'Destination array. Set myArray4 to 1 to # of Rows
+    ReDim myArray4(1 To Columns, 1 To Rows)
         
-    Dim i As Integer
+    Dim h As Integer
     
-    'Assign Z's first
-    For i = 1 To Rows
+    For h = 1 To Columns
         
-        value = myArray(i)
-        'value = (value - Application.WorksheetFunction.Median(myArray)) / MAD
-        value = (value - theMedian) / MAD
-        myArray4(i) = value
-    
-    Next i
-    
-    'get Min
-    'get Max
-    
-    MaxZ = Application.WorksheetFunction.Max(myArray4)
-    MinZ = Application.WorksheetFunction.Min(myArray4)
-    
-    For i = 1 To Rows
-    
-        value = myArray4(i)
+        Dim i As Integer
         
-        If (Abs(value) <= 1) Then
-            value = ((value + 1) / 4) + 0.25
-        ElseIf (value > 1) Then
+        MinZ = myArray(1, 1)
+        MaxZ = myArray(1, 1)
+        
+        'Assign Z's first, derive max/min z's
+        For i = 1 To Rows
             
-            value = (value - 1) / (MaxZ - 1) * 0.25 + 0.75
-            '(value - 1) '/ (Application.WorksheetFunction.Max(myArray3) - 1) '* 0.25 + 0.75
-        ElseIf (value < -1) Then
-            value = 0.25 - ((value + 1) / (MinZ + 1) * 0.25)
-        ElseIf value = 0 Then
-            value = 0.5
-        End If
-        myArray4(i) = value
-    
-    Next i
-    
+            value = myArray(h, i)
+            'value = (value - Application.WorksheetFunction.Median(myArray)) / MAD
+            value = (value - theMedian) / MAD
+            myArray4(h, i) = value
+            
+            'max/min z's
+            If (value > MaxZ) Then
+                MaxZ = value
+            End If
+            
+            If (value < MinZ) Then
+                MinZ = value
+            End If
+        
+        Next i
+        
+        'necessary to have max and minz derived per column ahead of time.
+        
+        For i = 1 To Rows
+        
+            value = myArray4(h, i)
+            
+            If (Abs(value) <= 1) Then
+                value = ((value + 1) / 4) + 0.25
+            ElseIf (value > 1) Then
+                
+                value = (value - 1) / (MaxZ - 1) * 0.25 + 0.75
+                '(value - 1) '/ (Application.WorksheetFunction.Max(myArray3) - 1) '* 0.25 + 0.75
+            ElseIf (value < -1) Then
+                value = 0.25 - ((value + 1) / (MinZ + 1) * 0.25)
+            ElseIf value = 0 Then
+                value = 0.5
+            End If
+            myArray4(h, i) = value
+        
+        Next i
+        
+    Next h
+        
     'Assign %'s second (need Z's to derive Max's/Min's)
     
     DeriveMADZPercents = Application.WorksheetFunction.Transpose(myArray4())
